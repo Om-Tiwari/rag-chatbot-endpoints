@@ -98,6 +98,8 @@ curl http://localhost:5000/history?limit=5
 }
 ```
 
+(chat_history)[!chat_history]
+
 ## Running the System
 ```bash
 python app.py
