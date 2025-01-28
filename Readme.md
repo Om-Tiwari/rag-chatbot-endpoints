@@ -4,7 +4,7 @@
 This project implements a Retrieval-Augmented Generation (RAG) chatbot that:
 - Processes PDF documents using **ChromaDB** for vector storage
 - Uses **Hugging Face embeddings** for semantic search
-- Generates responses via **Groq's Llama 3.2-1B** LLM
+- Generates responses via **Groq's deepseek-r1-distill-llama-70b** LLM
 - Stores chat history in a **MySQL** database
 - Serves predictions via a Flask API
 
@@ -31,21 +31,8 @@ pip install -r requirements.txt
 Create `.env` file:
 ```ini
 GROQ_API_KEY=your_groq_api_key
-MYSQL_HOST=localhost
-MYSQL_USER=your_mysql_user
-MYSQL_PASSWORD=your_mysql_password
-MYSQL_DATABASE=chat_history
+DATABASE_URL=
 ```
-
-### 3. Database Setup
-1. Create MySQL database:
-```sql
-CREATE DATABASE chat_history;
-```
-2. Tables will be auto-created when starting the app
-
-### 4. Add Documents
-Place PDF files in `documents/` folder. The system will automatically process `sample.pdf` on startup.
 
 ## Project Structure
 ```
@@ -65,17 +52,13 @@ Place PDF files in `documents/` folder. The system will automatically process `s
 ### POST `/upload`
 Add new documents to RAG system
 ```bash
-curl -X POST http://localhost:5000/upload \
-  -F "file=@path/to/your/document.pdf" \
-  -H "Content-Type: multipart/form-data"
+curl -X POST http://localhost:5000/upload -F "file=@path/to/your/document.pdf" -H "Content-Type: multipart/form-data"
 ```
 
 ### POST `/chat`
 Submit queries to the chatbot:
 ```bash
-curl -X POST http://localhost:5000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"query": "What is the main topic?"}'
+curl -X POST http://localhost:5000/chat -H "Content-Type: application/json" -d '{"query": "Write the summary of the pdf in 100 words."}'
 ```
 
 **Response:**
@@ -87,7 +70,7 @@ curl -X POST http://localhost:5000/chat \
 ```
 
 ### GET `/history`
-Retrieve chat history (max 100 messages):
+Retrieve chat history:
 ```bash
 curl http://localhost:5000/history?limit=5
 ```
@@ -105,7 +88,6 @@ curl http://localhost:5000/history?limit=5
   ]
 }
 ```
-![chat_history](./chat_history.jpg)
 
 ## Running the System
 ```bash

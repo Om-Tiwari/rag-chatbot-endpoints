@@ -2,3 +2,5 @@
 .venv
 .ruff_cache
 .env
+chroma_db/
+documents/

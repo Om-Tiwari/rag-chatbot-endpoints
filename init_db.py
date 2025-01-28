@@ -1,78 +1,68 @@
-import mysql.connector
-from mysql.connector import Error
-from dotenv import load_dotenv
 import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from dotenv import load_dotenv
+import logging
 from typing import List, Dict
-
 
 load_dotenv()
 
+logging.basicConfig(level=logging.INFO)
+
+
 def get_db_connection():
-    """Create and return a MySQL database connection"""
-    return mysql.connector.connect(
-        host=os.getenv("MYSQL_HOST"),
-        user=os.getenv("MYSQL_USER"),
-        password=os.getenv("MYSQL_PASSWORD"),
-        database=os.getenv("MYSQL_DATABASE")
-    )
+    """Create and return a PostgreSQL database connection"""
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise ValueError("DATABASE_URL is not set. Check your environment variables.")
+    return psycopg2.connect(dsn=database_url)
+
 
 def init_db():
-    """Initialize the MySQL database and create tables"""
+    """Initialize the PostgreSQL database and create tables"""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS messages (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                role ENUM('user', 'system'),
-                content TEXT
-            )
-        ''')
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-    except Error as e:
-        print(f"Error initializing database: {e}")
+        with get_db_connection() as conn, conn.cursor() as cursor:
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS messages (
+                    id SERIAL PRIMARY KEY,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    role VARCHAR(10) CHECK (role IN ('user', 'system')) NOT NULL,
+                    content TEXT NOT NULL
+                )
+            ''')
+            conn.commit()
+            logging.info("Database initialized successfully")
+    except Exception as e:
+        logging.error(f"Error initializing database: {e}")
+
 
 def store_message(role: str, content: str):
     """Store a message in the database"""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute(
-            "INSERT INTO messages (role, content) VALUES (%s, %s)",
-            (role, content)
-        )
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-    except Error as e:
-        print(f"Error storing message: {e}")
+        with get_db_connection() as conn, conn.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO messages (role, content) VALUES (%s, %s)",
+                (role, content)
+            )
+            conn.commit()
+            logging.info("Message stored successfully")
+    except Exception as e:
+        logging.error(f"Error storing message: {e}")
+
 
 def fetch_history(limit: int = 10) -> List[Dict]:
     """Fetch chat history from the database"""
+    if limit <= 0:
+        raise ValueError("Limit must be greater than 0")
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        
-        cursor.execute(
-            "SELECT * FROM messages ORDER BY timestamp DESC LIMIT %s",
-            (limit,)
-        )
-        
-        results = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        
-        return results
-        
-    except Error as e:
-        print(f"Error fetching history: {e}")
+        with get_db_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(
+                "SELECT * FROM messages ORDER BY timestamp DESC LIMIT %s",
+                (limit,)
+            )
+            results = cursor.fetchall()
+            logging.info(f"Fetched {len(results)} messages from history")
+            return results
+    except Exception as e:
+        logging.error(f"Error fetching history: {e}")
         return []
