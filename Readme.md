@@ -62,6 +62,14 @@ Place PDF files in `documents/` folder. The system will automatically process `s
 
 ## API Endpoints
 
+### POST `/upload`
+Add new documents to RAG system
+```bash
+curl -X POST http://localhost:5000/upload \
+  -F "file=@path/to/your/document.pdf" \
+  -H "Content-Type: multipart/form-data"
+```
+
 ### POST `/chat`
 Submit queries to the chatbot:
 ```bash

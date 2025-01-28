@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 from typing import List, Dict
 
-# Load environment variables
+
 load_dotenv()
 
 def get_db_connection():

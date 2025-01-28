@@ -16,13 +16,19 @@ class RagSystem:
             model_name="llama-3.2-1b-preview",
             groq_api_key=os.getenv("GROQ_API_KEY")
         )
+        self.persist_dir = "chroma_db"
 
-    def process_documents(self, file_path: str):
-        """Process PDF documents into vector store"""
+    def process_documents(self):
+        """Process all PDFs in documents folder"""
         try:
-            # Load and split documents
-            loader = PyPDFLoader(file_path)
-            pages = loader.load_and_split()
+            # Load all PDF files
+            pdf_files = [f for f in os.listdir("documents") if f.endswith(".pdf")]
+            
+            # Load and split all documents
+            pages = []
+            for pdf_file in pdf_files:
+                loader = PyPDFLoader(os.path.join("documents", pdf_file))
+                pages.extend(loader.load_and_split())
             
             # Create text chunks
             text_splitter = RecursiveCharacterTextSplitter(
@@ -31,15 +37,17 @@ class RagSystem:
             )
             chunks = text_splitter.split_documents(pages)
             
-            # Create vector store
+            # Create/update vector store with persistence
             self.vectorstore = Chroma.from_documents(
                 documents=chunks,
-                embedding=self.embedder
+                embedding=self.embedder,
+                persist_directory=self.persist_dir
             )
-            self.retriever = self.vectorstore.as_retriever(k=3)
+            self.retriever = self.vectorstore.as_retriever(k=3) # Retrieve top 3 documents you can change this parameter to retrieve more or less context
             
         except Exception as e:
             raise RuntimeError(f"Document processing failed: {str(e)}")
+
 
     def generate_response(self, query: str) -> str:
         """Generate response using RAG pipeline with Groq"""
@@ -63,6 +71,5 @@ class RagSystem:
         Answer:
         """
         
-        # Get response from Groq
         response = self.llm.invoke(prompt)
         return response.content
