@@ -1,11 +1,10 @@
-# RAG Chatbot with Flask & MySQL
+# RAG Chatbot with Flask
 
 ## Overview
 This project implements a Retrieval-Augmented Generation (RAG) chatbot that:
 - Processes PDF documents using **ChromaDB** for vector storage
 - Uses **Hugging Face embeddings** for semantic search
 - Generates responses via **Groq's deepseek-r1-distill-llama-70b** LLM
-- Stores chat history in a **MySQL** database
 - Serves predictions via a Flask API
 
 ## Features
@@ -15,10 +14,8 @@ This project implements a Retrieval-Augmented Generation (RAG) chatbot that:
 - Context-aware responses using retrieved document snippets
 
 ## Prerequisites
-- Python 3.9+
-- MySQL Server installed and running
+- Python 3.11+
 - [Groq API key](https://console.groq.com/keys)
-- PDF documents in `documents/` folder (e.g., `sample.pdf`)
 
 ## Setup
 
@@ -31,7 +28,7 @@ pip install -r requirements.txt
 Create `.env` file:
 ```ini
 GROQ_API_KEY=your_groq_api_key
-DATABASE_URL=
+DATABASE_URL=something
 ```
 
 ## Project Structure
@@ -41,10 +38,7 @@ DATABASE_URL=
 ├── init_db.py           # MySQL database initialization and operations
 ├── init_RAG.py          # Document processing & RAG pipeline logic
 ├── requirements.txt     # Python dependency list
-├── .env                 # Environment variables (API keys, DB credentials)
 ├── .gitignore           # Specifies untracked files
-└── documents/           # Folder for PDF documents
-    └── sample.pdf       # Example document for processing
 ```
 
 ## API Endpoints
